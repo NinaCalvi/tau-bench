@@ -98,7 +98,11 @@ class Env(object):
             info.source = "user"
             done = "###STOP###" in observation
         elif action.name in self.tools_map:
+            breakpoint()
             try:
+                ### TODO: could insert Selene in here: the eval criteria is going to be tool specific
+                ### and the usual "model output" will be the arguments being passed to the tool
+                ### do we have information about the previous context??
                 observation = self.tools_map[action.name].invoke(
                     data=self.data, **action.kwargs
                 )
@@ -112,7 +116,7 @@ class Env(object):
             info.source = action.name
 
         if done:
-            reward_res = self.calculate_reward()
+            reward_res = self.calculate_reward() # TODO: check what is the reward_res
             reward = reward_res.reward
             info.reward_info = reward_res
             info.user_cost = self.user.get_total_cost()

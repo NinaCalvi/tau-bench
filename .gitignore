@@ -5,3 +5,7 @@ results/**
 __pycache__/
 *.py[cod]
 *.egg-info/
+.venv/*
+run.sh
+test-auto-error-identification
+kubectl.sha256
