@@ -10,6 +10,7 @@ RESPOND_ACTION_FIELD_NAME = "content"
 class Action(BaseModel):
     name: str
     kwargs: Dict[str, Any]
+    history_tool_calls: Optional[List[Dict[str, Any]]] = None
 
 
 class Task(BaseModel):

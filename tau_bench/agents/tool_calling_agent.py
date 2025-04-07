@@ -23,6 +23,7 @@ class ToolCallingAgent(Agent):
         self.model = model
         self.provider = provider
         self.temperature = temperature
+        self.og_task: str | None = None
 
     def solve(
         self, env: Env, task_index: Optional[int] = None, max_num_steps: int = 30
@@ -30,6 +31,7 @@ class ToolCallingAgent(Agent):
         total_cost = 0.0
         env_reset_res = env.reset(task_index=task_index)
         obs = env_reset_res.observation
+        self.og_task = obs
         info = env_reset_res.info.model_dump()
         reward = 0.0
         messages: List[Dict[str, Any]] = [
@@ -48,7 +50,7 @@ class ToolCallingAgent(Agent):
             breakpoint()
             next_message = res.choices[0].message.model_dump()
             total_cost += res._hidden_params["response_cost"]
-            action = message_to_action(next_message)
+            action = message_to_action(next_message, tool_calls_history, self.og_task)
             env_response = env.step(action)
             reward = env_response.reward
             info = {**info, **env_response.info.model_dump()}
@@ -95,13 +97,15 @@ class ToolCallingAgent(Agent):
 
 
 def message_to_action(
-    message: Dict[str, Any],
+    message: Dict[str, Any], tool_calls_history: List[Dict[str, Any]], og_task: str
 ) -> Action:
     if "tool_calls" in message and message["tool_calls"] is not None and len(message["tool_calls"]) > 0 and message["tool_calls"][0]["function"] is not None:
         tool_call = message["tool_calls"][0]
         return Action(
             name=tool_call["function"]["name"],
             kwargs=json.loads(tool_call["function"]["arguments"]),
+            tool_calls_history=tool_calls_history,
+            og_task=og_task,
         )
     else:
         return Action(name=RESPOND_ACTION_NAME, kwargs={"content": message["content"]})
